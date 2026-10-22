@@ -1,0 +1,17 @@
+# PlatformIO build artifacts & environments
+.pio/
+.vscode/
+bazel-*
+.DS_Store
+Thumbs.db
+
+# PlatformIO compiled headers and cache
+*.o
+*.d
+*.bin
+*.elf
+*.map
+*.hex
+
+# OS temporary files
+.cache/
