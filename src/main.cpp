@@ -22,14 +22,31 @@ void heartbeatTask(void *pvParameters) {
 // --- Core 1 Real-Time Task (1 kHz Loop) ---
 void realTimeCore1Task(void *pvParameters) {
     const TickType_t xFrequency = pdMS_TO_TICKS(1); // 1ms tick interval
-    TickType_t xLastWakeTime = xTaskGetTickCount(); // <-- FIXED HERE
+    TickType_t xLastWakeTime = xTaskGetTickCount(); 
+    
+    // Track previous health state for edge detection (starts assuming healthy)
+    static bool lastHealthState = true; 
 
     while (true) {
-        // 1. Check safety interlock chain (+15V health)
-        if (checkSystemHealth()) {
-            // 2. Run converter finite state machine
+        // Evaluate current system health from the wired-AND interlock chain
+        bool currentHealth = checkSystemHealth();
+
+        // Detect state change (Edge Trigger)
+        if (currentHealth != lastHealthState) {
+            lastHealthState = currentHealth;
+            
+            if (!currentHealth) {
+                Serial.println("[WARNING] System Fault Detected! +15V Interlock Chain Broken. PWM Disabled.");
+            } else {
+                Serial.println("[INFO] System Health Restored. +15V Interlock Chain OK.");
+            }
+        }
+
+        // If healthy, run converter state machine; otherwise, safety_interlock handles PWM shutdown
+        if (currentHealth) {
             updateConverterFSM();
         }
+        
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }
 }

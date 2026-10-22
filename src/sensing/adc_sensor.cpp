@@ -1,26 +1,18 @@
 #include "adc_sensor.h"
 #include "config.h"
-#include "esp_adc_cal.h"
-
-// ADC Characterization structure for calibrated millivolt readings
-static esp_adc_cal_characteristics_t adc_chars;
 
 void initADCSensors() {
     // Configure ADC pins as inputs
     pinMode(PIN_USER_SET_POINT, INPUT);
     pinMode(PIN_VOLTAGE_SENSE_INPUT, INPUT);
 
-    // Configure ADC width and attenuation for 0-3.3V range
-    adc1_config_width(ADC_WIDTH_BIT_12);
-    adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_11); // Pin 34 (User Setpoint)
-    adc1_config_channel_atten(ADC1_CHANNEL_4, ADC_ATTEN_DB_11); // Pin 32 (Voltage Sense)
-
-    // Characterize ADC using factory calibration values stored in ESP32 eFuse
-    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 1100, &adc_chars);
+    // Set 11dB attenuation globally or per-pin to allow full 0-3.3V range measurement
+    analogSetPinAttenuation(PIN_USER_SET_POINT, ADC_11db);
+    analogSetPinAttenuation(PIN_VOLTAGE_SENSE_INPUT, ADC_11db);
 }
 
 /**
- * Reads the user setpoint trimpot with a rolling average filter to eliminate noise,
+ * Reads the user setpoint trimpot with a rolling average filter,
  * returning a normalized duty cycle float between 0.0 and 1.0.
  */
 float getUserSetPointDuty() {
@@ -28,12 +20,11 @@ float getUserSetPointDuty() {
     const uint8_t samples = 16;
 
     for (uint8_t i = 0; i < samples; i++) {
-        raw_sum += adc1_get_raw(ADC1_CHANNEL_6);
-        // tiny delay or yield if needed, but ADC read is fast
+        raw_sum += analogRead(PIN_USER_SET_POINT); // Built-in Arduino ESP32 read
     }
     uint32_t raw_avg = raw_sum / samples;
 
-    // Convert raw ADC (0-4095) to normalized float (0.0 to 1.0)
+    // Convert raw ADC (0-4095 for 12-bit) to normalized float (0.0 to 1.0)
     float normalizedDuty = (float)raw_avg / 4095.0f;
 
     // Safety clamp
@@ -45,12 +36,11 @@ float getUserSetPointDuty() {
 
 /**
  * Placeholder for your future external DC-proportional voltage sensor (0-3.3V).
- * Converts raw ADC counts into calibrated millivolts.
+ * Uses analogReadMilliVolts for built-in factory-calibrated millivolt outputs.
  */
 float getMeasuredVoltage() {
-    uint32_t raw_adc = adc1_get_raw(ADC1_CHANNEL_4);
-    uint32_t millivolts = esp_adc_cal_raw_to_voltage(raw_adc, &adc_chars);
+    uint32_t millivolts = analogReadMilliVolts(PIN_VOLTAGE_SENSE_INPUT);
     
-    // Return as volts (e.g., scale up based on your sensor's transfer function later)
+    // Return as volts 
     return (float)millivolts / 1000.0f; 
 }

@@ -3,6 +3,10 @@
 #include "sensing/adc_sensor.h"
 #include "drivers/pwm_driver.h"
 
+// Variables for change-detection logging
+static float lastPrintedDuty = -1.0f;
+const float PRINT_THRESHOLD = 0.01f; // Only print if duty changes by > 1%
+
 void initConverterFSM() {
     initADCSensors();
 }
@@ -14,6 +18,13 @@ void updateConverterFSM() {
     // static float targetDutyCycle = 0.5f; 
     // Read live user setpoint trimpot (0.0 to 1.0)
     float targetDutyCycle = getUserSetPointDuty();
+
+    // Check if the trimpot value has changed significantly
+    if (abs(targetDutyCycle - lastPrintedDuty) >= PRINT_THRESHOLD) {
+        lastPrintedDuty = targetDutyCycle;
+        Serial.printf("[Trimpot] New Target Duty: %.1f%% (Value: %.3f)\n", 
+                      targetDutyCycle * 100.0f, targetDutyCycle);
+    }
 
     switch (gridState) {
         case GRID_ZERO_CROSSING_DEADBAND:
