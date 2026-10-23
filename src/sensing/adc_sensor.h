@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 
+// Starts the background sampling task; must be called once before the other getters are used.
 void initADCSensors();
-float getUserSetPointDuty(); // Returns normalized target between 0.0 and 1.0
-float getMeasuredVoltage();  // Placeholder for future external DC-proportional sensor
+float getUserSetPointDuty();  // Latest filtered, normalized target (0.0 to 1.0), non-blocking
+float getMeasuredVoltage();   // Latest filtered measured voltage in volts, non-blocking
