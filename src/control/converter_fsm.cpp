@@ -15,10 +15,10 @@ void initConverterFSM() {
 void updateConverterFSM() {
   GridState gridState = getGridState();
 
-  // For testing phase, we can set a fixed target duty cycle (e.g., 0.5 for 55V -> 27.5V test)
-  // static float targetDutyCycle = 0.5f;
   // Read live user setpoint trimpot (0.0 to 1.0)
   float rawDutyCycle = getUserSetPointDuty();
+  // For testing phase, we can set a fixed target duty cycle (e.g., 0.5 for 55V -> 27.5V test)
+  // float rawDutyCycle = 0.5f;
 
   // Only accept the new setpoint (and log it) if it moved meaningfully
   if (abs(rawDutyCycle - appliedDutyCycle) >= DUTY_CHANGE_THRESHOLD) {

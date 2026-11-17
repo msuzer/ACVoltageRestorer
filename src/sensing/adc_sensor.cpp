@@ -6,7 +6,7 @@
 // so consumers always read an already-fresh value instead of blocking on multiple analogReads.
 namespace {
 constexpr uint8_t FILTER_WINDOW = 16;
-constexpr TickType_t SAMPLE_PERIOD_TICKS = pdMS_TO_TICKS(2);  // 500 Hz sampling
+constexpr TickType_t SAMPLE_PERIOD_TICKS = pdMS_TO_TICKS(10);  // 100 Hz sampling
 
 // Incremental moving-average filter over one ADC pin; readRaw() picks counts vs. calibrated mV.
 class FilteredAdcChannel {
